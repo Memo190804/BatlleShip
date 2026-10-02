@@ -1,5 +1,9 @@
 # Batalla Naval — Interfaz Gráfica (Swing)
 
+> **Actualización:** la parte de red ya está hecha en `ServidorBatalla.java`
+> y `ClienteBatalla.java` (reemplazan al antiguo `Main.java` de demostración).
+> Lo de abajo describe cómo están diseñadas las ventanas.
+
 Esta es la interfaz gráfica completa para el proyecto de Batalla Naval, lista
 para pegarse dentro del mismo proyecto de NetBeans donde tu compañero está
 trabajando la parte de sockets cliente-servidor.
@@ -20,7 +24,9 @@ src/
     VentanaConexion.java   -> JFrame: nombre de usuario + IP + puerto
     VentanaColocacion.java -> JFrame: colocar los 7 barcos (arrastrar no, click + orientación)
     VentanaJuego.java      -> JFrame: tablero propio + tablero de tiro, turnos, registro
-  Main.java                -> demo que encadena las 3 ventanas (aquí van los TODO de red)
+  red/Protocolo.java       -> tipos de mensaje de los datagramas
+  ServidorBatalla.java     -> servidor UDP (la PC)
+  ClienteBatalla.java      -> cliente UDP que controla las 3 ventanas
 ```
 
 ## Cómo importarlo en NetBeans

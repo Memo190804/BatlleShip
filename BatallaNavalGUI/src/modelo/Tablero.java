@@ -125,6 +125,15 @@ public class Tablero {
         }
     }
 
+    /** Celdas del barco que ocupa (fila, columna), o lista vacía si ahí no hay barco. */
+    public List<Coordenada> getCeldasBarcoEn(int fila, int columna) {
+        Coordenada coord = new Coordenada(fila, columna);
+        for (Barco b : barcos) {
+            if (b.ocupa(coord)) return b.getCeldas();
+        }
+        return new ArrayList<>();
+    }
+
     public boolean todosHundidos() {
         if (barcos.isEmpty()) return false;
         for (Barco b : barcos) if (!b.estaHundido()) return false;

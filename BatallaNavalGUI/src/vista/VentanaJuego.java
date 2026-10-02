@@ -1,10 +1,12 @@
 package vista;
 
+import modelo.Coordenada;
 import modelo.ResultadoDisparo;
 import modelo.Tablero;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 /**
  * Pantalla principal de juego: muestra el tablero propio y el tablero de tiro
@@ -99,6 +101,20 @@ public class VentanaJuego extends JFrame {
         tableroTiro.marcarResultadoPropio(fila, columna, resultado);
         panelTiro.actualizar();
         agregarRegistro("Disparaste a " + coordTexto(fila, columna) + ": " + textoResultado(resultado));
+    }
+
+    /** Punto 8: pinta como hundidas todas las celdas del barco rival que se acaba de hundir. */
+    public void marcarBarcoHundido(List<Coordenada> celdas) {
+        for (Coordenada c : celdas) {
+            tableroTiro.marcarResultadoPropio(c.getFila(), c.getColumna(), ResultadoDisparo.HUNDIDO);
+        }
+        panelTiro.actualizar();
+    }
+
+    /** Bloquea el tablero de tiro mientras se espera la respuesta a un disparo. */
+    public void bloquearDisparo() {
+        panelTiro.setInteractivo(false);
+        etiquetaTurno.setText("Esperando resultado del disparo...");
     }
 
     /** Procesa un disparo recibido del rival sobre nuestro propio tablero; devuelve el resultado a enviar de vuelta. */

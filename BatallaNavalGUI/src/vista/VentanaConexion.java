@@ -15,7 +15,7 @@ public class VentanaConexion extends JFrame {
 
     private final JTextField campoNombre = new JTextField(15);
     private final JTextField campoIp = new JTextField("127.0.0.1", 15);
-    private final JTextField campoPuerto = new JTextField("5000", 6);
+    private final JTextField campoPuerto = new JTextField("1234", 6);
     private final JButton botonConectar = new JButton("Conectar");
     private final JLabel etiquetaEstado = new JLabel(" ");
 

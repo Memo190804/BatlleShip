@@ -1,0 +1,29 @@
+# Java
+*.class
+*.jar
+*.log
+
+# NetBeans
+build/
+dist/
+nbproject/private/
+nbbuild/
+nbdist/
+
+# IntelliJ / VS Code / Eclipse
+.idea/
+*.iml
+out/
+.vscode/
+bin/
+.classpath
+.project
+.settings/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos temporales de Word
+~$*
