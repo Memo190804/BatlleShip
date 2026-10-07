@@ -2,27 +2,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-/*
- * ============================================================================
- *  VENTANA 1: CONEXION  (nombre, IP, puerto y dificultad)
- * ============================================================================
- */
 public class VentanaConexion extends JFrame implements ActionListener {
 
     JTextField campoNombre = new JTextField(15);
     JTextField campoIp = new JTextField("127.0.0.1", 15);
     JTextField campoPuerto = new JTextField("1234", 15);
-    // Lista desplegable para elegir la dificultad
+
     JComboBox<String> comboDificultad = new JComboBox<>(new String[]{"Facil", "Dificil"});
     JButton btConectar = new JButton("Conectar");
     JLabel etiquetaEstado = new JLabel(" ", SwingConstants.CENTER);
-
 
     public VentanaConexion() {
         super("Batalla Naval - Conexion");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Cuadricula de 5 filas x 2 columnas: texto | campo
         JPanel panel = new JPanel(new GridLayout(5, 2, 5, 5));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         panel.add(new JLabel("Nombre de usuario:"));
@@ -43,10 +36,9 @@ public class VentanaConexion extends JFrame implements ActionListener {
         btConectar.addActionListener(this);
 
         pack();
-        setLocationRelativeTo(null); // centrar en la pantalla
+        setLocationRelativeTo(null);
     }
 
-    // Boton "Conectar"
     public void actionPerformed(ActionEvent e) {
         String nombre = campoNombre.getText().trim();
         String ip = campoIp.getText().trim();
@@ -61,7 +53,7 @@ public class VentanaConexion extends JFrame implements ActionListener {
             setEstado("El puerto debe ser un numero");
             return;
         }
-        // Vemos que eligio en la lista de dificultad
+
         int dificultad;
         if (comboDificultad.getSelectedItem().equals("Dificil")) {
             dificultad = BotPC.DIFICIL;
