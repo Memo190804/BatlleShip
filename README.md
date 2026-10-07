@@ -7,14 +7,16 @@ con interfaz gráfica en Swing y comunicación por sockets UDP (`DatagramSocket`
 
 ```
 BatlleShip/
-├── BatallaNavalGUI/          # Interfaz gráfica (Swing)
-│   ├── README.md             # Detalle de clases e integración con la red
-│   └── src/
+├── BatallaNavalGUI/
+│   ├── README.md                 # Guía para entender y modificar el código
+│   └── src/                      # Todo sin paquetes, como los ejemplos de clase
 │       ├── ServidorBatalla.java  # Servidor = la PC (UDP, turnos, disparos)
 │       ├── ClienteBatalla.java   # Cliente: ventanas + comunicación UDP
-│       ├── red/Protocolo.java    # Tipos de mensaje que viajan en los datagramas
-│       ├── modelo/           # Lógica del juego: Tablero, Barco, Coordenada...
-│       └── vista/            # Ventanas: Conexión, Colocación, Juego
+│       ├── Protocolo.java        # Tipos de mensaje y regla de los tiros
+│       ├── Tablero.java          # Matriz 10x10, barcos y disparos
+│       ├── BotPC.java            # Dificultad de la PC (Fácil / Difícil)
+│       ├── TableroPanel.java     # Cuadrícula de botones
+│       └── Ventana*.java         # Conexión, Colocación, Juego
 ├── docs/
 │   └── Practica2_Batalla_Naval.docx   # Enunciado de la práctica
 ├── LICENSE
@@ -45,20 +47,26 @@ escritos con `DataOutputStream` (como en los ejemplos `C1`/`S1` de clase):
 
 | Mensaje | Dirección | Datos |
 |---|---|---|
-| `SOLICITUD` | C → S | nombre del usuario |
+| `SOLICITUD` | C → S | nombre, dificultad |
 | `INICIO` | S → C | mensaje de bienvenida |
 | `RECHAZO` | S → otro cliente | motivo (ya hay partida en curso) |
 | `LISTO` | C → S | — |
-| `TURNO` | S → C | ¿es tu turno?, disparos restantes |
+| `TURNO` | S → C | ¿es tu turno?, tiros restantes |
 | `DISPARO` | C ↔ S | fila, columna |
-| `RESULTADO` | C ↔ S | fila, columna, resultado, ¿fin?, celdas del barco hundido |
+| `RESULTADO` | C ↔ S | fila, columna, resultado (AGUA/TOCADO/HUNDIDO), ¿fin? |
+
+## Reglas
+
+- Como pide el Word (punto 6): hasta **3 tiros seguidos**, o hasta que falles (AGUA).
+- Dificultad **Fácil**: la PC tira al azar. **Difícil**: cuando le da a un barco
+  prueba las 4 casillas de alrededor y, al saber la orientación, solo las 2 puntas.
 
 ## Estado
 
 - [x] Interfaz gráfica (conexión, colocación de barcos, juego)
 - [x] Lógica del tablero (colocación, disparos, hundimiento)
-- [x] Servidor UDP: un solo cliente, barcos y turno al azar, hasta 3 tiros
-- [x] La PC dispara sola (al azar, sin repetir casillas)
+- [x] Servidor UDP: un solo cliente, barcos y turno al azar
+- [x] La PC dispara sola, con dificultad Fácil o Difícil
 
 ## Licencia
 

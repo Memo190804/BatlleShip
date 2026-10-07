@@ -1,111 +1,70 @@
-# Batalla Naval — Interfaz Gráfica (Swing)
+# Batalla Naval — Guía para entender el código
 
-> **Actualización:** la parte de red ya está hecha en `ServidorBatalla.java`
-> y `ClienteBatalla.java` (reemplazan al antiguo `Main.java` de demostración).
-> Lo de abajo describe cómo están diseñadas las ventanas.
+Todo está en `src/`, sin paquetes (igual que los ejemplos `C`, `S`, `C1`, `S1` de clase).
 
-Esta es la interfaz gráfica completa para el proyecto de Batalla Naval, lista
-para pegarse dentro del mismo proyecto de NetBeans donde tu compañero está
-trabajando la parte de sockets cliente-servidor.
+| Archivo | Qué hace |
+|---|---|
+| `ServidorBatalla.java` | El servidor **es la PC**. Igual que `S1`: `for(;;)` → `receive` → lee el tipo de mensaje → responde. |
+| `ClienteBatalla.java` | El jugador. Manda mensajes cuando presionas botones y tiene un hilo (`run()`) que escucha al servidor. |
+| `Protocolo.java` | Números de cada tipo de mensaje, el puerto y el máximo de tiros seguidos (3). |
+| `Tablero.java` | Matriz de 10x10: colocar barcos, recibir disparos, saber si ya se hundió todo. |
+| `BotPC.java` | Decide a dónde dispara la PC (**dificultad**). |
+| `VentanaConexion.java` | Ventana 1: nombre, IP, puerto y dificultad. |
+| `VentanaColocacion.java` | Ventana 2: colocar los 7 barcos. |
+| `VentanaJuego.java` | Ventana 3: tu tablero, el tablero del rival y el registro. |
+| `TableroPanel.java` | La cuadrícula de 10x10 botones que se usa en las ventanas 2 y 3. |
 
-## Estructura
+## Cómo viaja un mensaje (lo mismo que `C1`/`S1`)
 
+Para **mandar**:
+
+```java
+ByteArrayOutputStream baos = new ByteArrayOutputStream();
+DataOutputStream dos = new DataOutputStream(baos);
+dos.writeInt(Protocolo.DISPARO);   // 1) siempre primero el tipo
+dos.writeInt(fila);                // 2) luego los datos
+dos.writeInt(columna);
+dos.flush();
+enviar(baos.toByteArray());        // 3) se mete en un DatagramPacket y se manda
 ```
-src/
-  modelo/
-    Coordenada.java      -> (fila, columna) de una celda
-    TipoBarco.java        -> enum con los 4 tipos de barco y sus cantidades/longitudes
-    EstadoCelda.java       -> VACIO, BARCO, AGUA, TOCADO, HUNDIDO
-    ResultadoDisparo.java  -> AGUA, TOCADO, HUNDIDO, YA_DISPARADO, COORDENADA_INVALIDA
-    Barco.java             -> un barco individual y sus celdas tocadas
-    Tablero.java           -> matriz 10x10, colocación de barcos, lógica de disparo
-  vista/
-    TableroPanel.java      -> JPanel que dibuja un tablero de 10x10 y captura clicks
-    VentanaConexion.java   -> JFrame: nombre de usuario + IP + puerto
-    VentanaColocacion.java -> JFrame: colocar los 7 barcos (arrastrar no, click + orientación)
-    VentanaJuego.java      -> JFrame: tablero propio + tablero de tiro, turnos, registro
-  red/Protocolo.java       -> tipos de mensaje de los datagramas
-  ServidorBatalla.java     -> servidor UDP (la PC)
-  ClienteBatalla.java      -> cliente UDP que controla las 3 ventanas
+
+Para **recibir**, se lee **en el mismo orden** en que se escribió:
+
+```java
+int tipo = dis.readInt();
+int fila = dis.readInt();
+int columna = dis.readInt();
 ```
 
-## Cómo importarlo en NetBeans
+> Regla de oro: si agregas un dato al mensaje, agrégalo **en los dos lados**
+> (el que escribe y el que lee) y en la misma posición. Si no, se leen datos
+> revueltos.
 
-**Opción A (más simple): agregar los archivos a tu proyecto existente**
-1. En NetBeans, en tu proyecto actual, click derecho sobre `Source Packages` →
-   `New` → `Java Package`, crea los paquetes `modelo` y `vista`.
-2. Copia cada archivo `.java` de esta carpeta dentro del paquete correspondiente
-   (puedes arrastrarlos desde el explorador de archivos de tu SO directo al
-   paquete en NetBeans, o copiar/pegar el contenido en clases nuevas).
-3. Listo, ya tienes las 3 ventanas disponibles para usarlas desde el código
-   de red de tu compañero.
+## Cómo funciona la dificultad (`BotPC.java`)
 
-**Opción B: abrir esta carpeta como proyecto nuevo**
-1. `File` → `New Project` → `Java with Existing Sources`.
-2. En "Source Package Folders" selecciona la carpeta `src` de este ZIP.
-3. NetBeans detectará `Main.java` como clase principal.
+- **Fácil:** dispara al azar en todo el tablero.
+- **Difícil:**
+  1. Mientras no le haya dado a nada, dispara al azar (100 casillas posibles).
+  2. Le dio **una vez** a un barco: no sabe si está horizontal o vertical,
+     así que solo prueba las **4** casillas de alrededor (arriba, abajo, izquierda, derecha).
+  3. Le dio **dos o más veces en línea**: ya sabe la orientación, así que solo
+     quedan **2** opciones, las dos puntas de la línea.
+  4. Cuando lo hunde, vuelve al paso 1.
 
-> Nota: estas clases NO usan el editor visual (`.form`) de NetBeans, están
-> escritas a mano con `GridBagLayout`/`BorderLayout`/`BoxLayout`. Funcionan
-> igual, simplemente no vas a ver los componentes en el diseñador "Matisse" de
-> NetBeans si abres las clases con doble click — para editarlas usa la vista
-> de código (`Source`), no la de diseño (`Design`). Si prefieres editarlas
-> luego con el diseñador visual, puedo adaptarlas a partir de `.form`s vacíos
-> generados por NetBeans; dímelo y te preparo esa versión.
+El bot solo mira el tablero de tiro de la PC (sus propios disparos), nunca ve
+tus barcos.
 
-## Cómo se integra con el código de sockets de tu compañero
+En 2000 partidas simuladas, la PC necesitó en promedio **~96 tiros** para ganar
+en Fácil y **~72** en Difícil.
 
-Diseñé las 3 ventanas para que **no dependan en nada del código de red**. Cada
-una expone una interfaz (`listener`) que tu compañero debe implementar, y
-métodos públicos que la capa de red debe llamar cuando llegan mensajes del
-otro extremo. Todo el flujo está resumido en `Main.java` con comentarios
-`// TODO (red): ...` exactamente en los puntos donde va su código.
+## Si te piden cambiar algo, ¿qué muevo?
 
-Resumen del flujo (según los 9 puntos del requerimiento):
-
-1. **VentanaConexion** → botón "Conectar" dispara
-   `ConexionListener.onConectar(nombreUsuario, ip, puerto)`. Ahí tu compañero
-   abre el `DatagramSocket` y envía la solicitud de juego (punto 2).
-2. Cuando el servidor confirme el inicio de juego (punto 3), se cierra esa
-   ventana y se abre `VentanaColocacion`.
-3. **VentanaColocacion** → el usuario coloca sus 7 barcos (1 acorazado[4],
-   2 cruceros[3], 3 destructores[2], 1 submarino[5]) haciendo click en el
-   tablero, eligiendo orientación H/V, o con el botón "Colocar
-   aleatoriamente". El botón "Listo" se habilita solo cuando ya se colocaron
-   todos, y dispara `ColocacionListener.onListo(tableroPropio)` (punto 4).
-4. Servidor coloca sus barcos aleatoriamente y decide quién empieza (punto
-   5) — esto no requiere GUI del lado cliente, solo se recibe el aviso de
-   turno.
-5. **VentanaJuego** → tiene el tablero propio (izquierda, no interactivo) y
-   el tablero de tiro (derecha, donde se hace click para disparar). Métodos
-   clave:
-   - `setTurno(boolean esMiTurno)` — habilita/deshabilita el disparo.
-   - `setDisparosRestantes(int)` — refleja el máximo de 3 tiros seguidos
-     (punto 6).
-   - Al hacer click en el tablero de tiro se dispara
-     `JuegoListener.onDisparo(fila, columna)` — aquí se envía la coordenada
-     al otro extremo (punto 7).
-   - Cuando llega el resultado de un disparo propio:
-     `ventanaJuego.mostrarResultadoPropio(fila, columna, resultado)`.
-   - Cuando llega una coordenada disparada por el rival:
-     `ResultadoDisparo r = ventanaJuego.recibirDisparoRival(fila, columna);`
-     y ese `r` se debe enviar de vuelta al otro extremo (esto ya calcula
-     internamente si fue AGUA/TOCADO/HUNDIDO, punto 8).
-   - `ventanaJuego.mostrarFinDeJuego(boolean gano)` cuando el servidor avisa
-     que se hundió toda una flota (punto 9).
-
-Las coordenadas siempre se manejan como `fila` (0-9, mostrada como A-J) y
-`columna` (0-9, mostrada como 1-10), para que coincidan fácilmente con lo que
-tu compañero mande por el socket (puede convertir a texto tipo "A1" o mandar
-dos enteros, como prefieran para su protocolo).
-
-## Notas
-
-- El tablero valida que los barcos no queden pegados entre sí (regla clásica
-  de Batalla Naval). Si no la quieren, es una sola condición que se puede
-  quitar en `Tablero.colocarBarco(...)`.
-- `Main.java` es solo una **demostración de flujo** (sin red real, para que
-  puedas correr y ver las 3 pantallas). Tu compañero debe reemplazar/ampliar
-  esos bloques `TODO` con su código de sockets real.
-- Si necesitan un modo consola además del gráfico (la nota final del punto 9
-  lo permite como alternativa), avísame y preparo esa versión también.
+| Quiero… | Dónde |
+|---|---|
+| Cambiar cuántos tiros seguidos (el Word dice 3) | `Protocolo.java`: `MAX_DISPAROS` |
+| Cambiar el puerto | `Protocolo.java`: `PUERTO` (y el texto `"1234"` en `VentanaConexion.java`) |
+| Cambiar los barcos (cantidad o tamaño) | `Tablero.java`: los arreglos `NOMBRES` y `TAMANIOS` (deben tener el mismo número de elementos) |
+| Permitir barcos pegados | `Tablero.java`, método `casillaLibre`: revisar solo `casilla[f][c]` en vez de las 8 de alrededor. **Ojo:** el bot y `marcarHundido` suponen que los barcos no se pegan |
+| Que la PC tire más rápido o más lento | `ServidorBatalla.java`, `dispararPC()`: `Thread.sleep(1000)` (milisegundos) |
+| Cambiar colores del tablero | `TableroPanel.java`, método `pintar()` |
+| Agregar otra dificultad | `BotPC.java`: nueva constante (ej. `MEDIO = 2`) y su `if` en `elegirTiro`; en `VentanaConexion.java` agregar `"Medio"` a la lista del `JComboBox` y un `if` más donde se revisa `getSelectedItem()` |

@@ -1,4 +1,4 @@
-# Normaliza saltos de línea: el repo guarda LF, cada SO usa el suyo al hacer checkout
+
 * text=auto
 
 *.docx binary
